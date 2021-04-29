@@ -69,7 +69,7 @@ public class CameraFollow : MonoBehaviour
                         maxPosiTran = this.mFocusList[j].transform;
                         magnitude = distance;
                         this.CurDistance.x = Mathf.Abs(posj.x - posi.x);
-                        this.CurDistance.y = Mathf.Abs(posj.y - posi.y);
+                        this.CurDistance.y = Mathf.Abs(posj.y - posi.y)+this.mOffsetY;
                     }
                 }
             }
