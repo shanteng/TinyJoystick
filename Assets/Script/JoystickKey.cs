@@ -1,8 +1,24 @@
 ﻿
 using UnityEngine;
 
+[System.Serializable]
+public class JoyButtonResponseData
+{
+    public bool mIsGrounded;
+    public JoyButtonCode mCode;
+    public JoyButtonEvent mEvent;
+    public JoyButtonDir mDir;
 
-public enum JoyButtonCode
+    public bool IsEqual(JoyButtonResponseData data)
+    {
+        return data.mIsGrounded == this.mIsGrounded &&
+             data.mCode == this.mCode &&
+              data.mEvent == this.mEvent &&
+               data.mDir == this.mDir;
+    }
+}
+
+    public enum JoyButtonCode
 {
     A,
     B,
@@ -12,8 +28,8 @@ public enum JoyButtonCode
 public enum JoyButtonEvent
 {
     None=0,
-    BeginTouch,
-    SlidingClickDir,
+    Touched,
+    SlideDir,
     Holding,
     EndTouch,
 }

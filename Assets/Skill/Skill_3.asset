@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f9c3b66af8a834a894738161cdd661, type: 3}
+  m_Name: Skill_3
+  m_EditorClassIdentifier: 
+  _config:
+    _AttackValue: 3
+    _Type: 1
+    _keyData:
+      mIsGrounded: 1
+      mCode: 1
+      mEvent: 1
+      mDir: 0
+    _NextAttackValue: 0
+    _AttackDamage: 30
+    _AttackFx:
+      prefab: {fileID: 1689350352904714906, guid: 236bdcd0eb095904fa2034ac41a74fd1,
+        type: 3}
+      lifetime: 1
+    _AttackHitFx:
+      prefab: {fileID: 7909157450436934150, guid: d1c231cb9caa55747a2db6497d32675f,
+        type: 3}
+      lifetime: 0
+    _EndShakeStartFrame: 30
+    _FrameMove:
+      _Frame: -1
+      _xCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      _yCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+    _HitBubbleGroup: weapon

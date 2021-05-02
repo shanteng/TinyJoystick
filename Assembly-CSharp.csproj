@@ -71,6 +71,7 @@
     <Compile Include="Assets\Script\LocalPlayerMotionHandler.cs" />
     <Compile Include="Assets\Script\NetworkPlayer.cs" />
     <Compile Include="Assets\Script\PlayerHeadUi.cs" />
+    <Compile Include="Assets\Script\SkillScriptableObject.cs" />
     <Compile Include="Assets\Script\StateBehaviour.cs" />
     <Compile Include="Assets\Script\TitleAttribute.cs" />
     <Compile Include="Assets\Script\TriggerKeyHash.cs" />

@@ -21,10 +21,12 @@ public class StateBehaviourInfo
 }
 
 
-public enum FrameParam
+public enum FrameParamType
 {
     JumpReady,//准备起跳
     BeginFalling,
+    HoldingAttack,
+    Attack,
 }
 
 [System.Serializable]
@@ -32,10 +34,11 @@ public class StateCallBackFrame
 {
     [Title("回调帧", "#FF4F63")]
     public int mFrame;
+    [Title("回调类型", "#FF4F63")]
+    public FrameParamType mType;
     [Title("回调参数", "#FF4F63")]
-    public FrameParam mParam;
+    public string mParam;
 }
-
 
 public class StateBehaviour : StateMachineBehaviour
 {
@@ -50,7 +53,6 @@ public class StateBehaviour : StateMachineBehaviour
 
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-
         this.mCallBackFrameQueue = new Queue<StateCallBackFrame>();
         for (int i = 0; i < this.mCallBackFrames.Count; ++i)
         {
@@ -62,7 +64,6 @@ public class StateBehaviour : StateMachineBehaviour
         AnimatorClipInfo[] clips = animator.GetCurrentAnimatorClipInfo(layerIndex);
         if (clips.Length > 0)
             this.mStateInfo.Init(clips[0]);
-
     }
 
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -75,7 +76,7 @@ public class StateBehaviour : StateMachineBehaviour
             StateCallBackFrame peekFrame = this.mCallBackFrameQueue.Peek();
             if (this.mStateInfo.mRunningFrame >= peekFrame.mFrame)
             {
-                this.mLocalMotion.OnBehaviourCallBack(this.mStateInfo, this.mCallBackFrameQueue.Dequeue());
+                this.mLocalMotion.OnBehaviourCallBack(this.mCallBackFrameQueue.Dequeue());
             }
         }
     }

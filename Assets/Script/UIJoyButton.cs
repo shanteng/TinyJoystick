@@ -98,7 +98,7 @@ public class UIJoyButton : MonoBehaviour
         this.mPress.SetActive(true);
         this.mTouchStartTime = Time.time;
         //按下直接响应Click
-        this.CallBackEvent(JoyButtonEvent.BeginTouch);
+        this.CallBackEvent(JoyButtonEvent.Touched);
     }
 
     private void SetJoyStickAxis(Vector3 worldPos)
@@ -174,7 +174,7 @@ public class UIJoyButton : MonoBehaviour
         if (this.mHasNotifyedEvent == JoyButtonEvent.None && this.mArrowDir != JoyButtonDir.Center)
         {
             //通知是一个滑动操作
-            this.CallBackEvent(JoyButtonEvent.SlidingClickDir);
+            this.CallBackEvent(JoyButtonEvent.SlideDir);
         }
         else
         {

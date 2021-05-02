@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: light_g_big_04
+  m_Shader: {fileID: 10720, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _HEI_MASK_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _Disslove_Tex:
+        m_Texture: {fileID: 2800000, guid: ce9571251bab84c45bb4104284b450f2, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: ad805dd73b51a3d4398745b80f7104bb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Main_Tex:
+        m_Texture: {fileID: 2800000, guid: ad805dd73b51a3d4398745b80f7104bb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ReflectTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _opacity_Tex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AffectedByBloom: 5
+    - _Alpha: 1
+    - _AlphaDstBlend: 10
+    - _BlendMode: 10
+    - _BlendWithUI: 0
+    - _ColorSrcBlend: 5
+    - _CullMode: 0
+    - _Cutoff: 0.5
+    - _Diss_U_speed: 1
+    - _Diss_V_speed: 1
+    - _Disslove: 0
+    - _GrayShow: 0
+    - _Intensity: 1.3
+    - _InvFade: 1
+    - _OffScreenRenderingBlend: 0
+    - _SelfManageStencil: 0
+    - _ShowReflectCube: 0
+    - _SpeedMode: 0
+    - _Stencil: 1
+    - _StencilComp: 0
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _Tex_U_speed: 0
+    - _Tex_V_speed: 0
+    - _USpeed: 0
+    - _UVRotateSpeed: 0
+    - _VSpeed: 0
+    - _VertexMode: 0
+    - _ZTest: 8
+    - _ZW_UV: 0
+    - _ZWrite: 0
+    - _hei_mask: 1
+    m_Colors:
+    - _Color: {r: 2.5, g: 1.4979718, b: 0.5882354, a: 1}

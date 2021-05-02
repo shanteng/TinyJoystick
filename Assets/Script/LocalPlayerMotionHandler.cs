@@ -66,7 +66,6 @@ public class JumpData
 public class LocalPlayerMotionHandler : MonoBehaviour
 {
     public float mMaxSpeedValue = 10f;
-
     public AnimationCurve mSpdToForceDeltaCurve;
     public float mResistanceRate = 16f;
 
@@ -94,7 +93,10 @@ public class LocalPlayerMotionHandler : MonoBehaviour
     private bool mIsGrounded = true;
     private XMoveDirection _direction = XMoveDirection.Right;
     private Dictionary<XMoveDirection, float> _FaceDirRotateYDic;
-
+    public List<SkillConfig> mSkillConfigList;
+    private Dictionary<int, SkillConfig> mSkillDic;
+    private bool mIsButtonTouched = false;
+    private List<SkillConfig> mSkillQueueList = new List<SkillConfig>();
     public XMoveDirection Dir => this._direction;
     private void Awake()
     {
@@ -102,6 +104,13 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         _FaceDirRotateYDic = new Dictionary<XMoveDirection, float>();
         _FaceDirRotateYDic.Add(XMoveDirection.Right, mRotateY);
         _FaceDirRotateYDic.Add(XMoveDirection.Left, mRotateY-180);
+
+        this.mSkillDic = new Dictionary<int, SkillConfig>();
+        foreach (SkillConfig cfg in this.mSkillConfigList)
+        {
+            this.mSkillDic.Add(cfg._AttackValue, cfg);
+        }
+
         this.ChangeDir(XMoveDirection.Right);
     }
 
@@ -122,14 +131,14 @@ public class LocalPlayerMotionHandler : MonoBehaviour
     }
 
     #region StateBehaviour
-    public void OnBehaviourCallBack(StateBehaviourInfo stateInfo, StateCallBackFrame callFrameData)
+    public void OnBehaviourCallBack(StateCallBackFrame callFrameData)
     {
-        if (callFrameData.mParam == FrameParam.JumpReady)
+        if (callFrameData.mType == FrameParamType.JumpReady)
         {
             this.mMotion.y = this.mJumpData.CurJumpStrength;
             this.mPlayer.OnReadyJump();
         }
-        else if (callFrameData.mParam == FrameParam.BeginFalling)
+        else if (callFrameData.mType == FrameParamType.BeginFalling)
         {
             this.mPlayer.OnBeginFalling();
         }
@@ -291,13 +300,71 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         this.mMotion.x = 0;
     }
 
+    public void CallAttackTouched(JoyButtonResponseData data)
+    {
+        mIsButtonTouched = true;
+
+        SkillConfig lastBuff = null;
+        if (this.mSkillQueueList.Count > 0)
+            lastBuff = this.mSkillQueueList[mSkillQueueList.Count - 1];
+
+        if (lastBuff == null)
+        {
+            this.mMotion.x = 0;//停止横向移动
+        }
+    }
+
+    public void CallAttackHolding(JoyButtonResponseData data)
+    {
+      
+    }
+
+    public void CallAttackEnd(JoyButtonResponseData data)
+    {
+        mIsButtonTouched = false;
+    }
+
+    private void CallAttack(JoyButtonResponseData data)
+    {
+        if (data.mEvent == JoyButtonEvent.Touched ||
+            data.mEvent == JoyButtonEvent.SlideDir)
+        {
+            this.CallAttackTouched(data);
+        }
+        else if (data.mEvent == JoyButtonEvent.Holding)
+        {
+            this.CallAttackHolding(data);
+        }
+        else if (data.mEvent == JoyButtonEvent.EndTouch)
+        {
+            this.CallAttackEnd(data);
+        }
+
+        SkillConfig useConfig = null;
+        foreach (SkillConfig config in this.mSkillDic.Values)
+        {
+            if (config._keyData.IsEqual(data))
+            {
+                useConfig = config;
+            }
+        }
+    }
 
     #region JoyButton
     public void OnUiJoyButtonEvent(JoyButtonCode buttonCode,JoyButtonEvent evt, JoyButtonDir dir)
     {
-        if (buttonCode == JoyButtonCode.Jump && evt == JoyButtonEvent.BeginTouch)
+        JoyButtonResponseData data = new JoyButtonResponseData();
+        data.mCode = buttonCode;
+        data.mEvent = evt;
+        data.mDir = dir;
+        data.mIsGrounded = this.mIsGrounded;
+        if (data.mCode == JoyButtonCode.Jump && data.mEvent == JoyButtonEvent.Touched)
         {
             this.CallJump();
+        }
+        else 
+        {
+            this.CallAttack(data);
         }
     }
     #endregion
