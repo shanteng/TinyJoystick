@@ -20,7 +20,7 @@ MonoBehaviour:
       mCode: 0
       mEvent: 1
       mDir: 0
-    _NextAttackValue: 0
+    _NextAttackValue: 2
     _AttackDamage: 30
     _AttackFx:
       prefab: {fileID: 6628864615636264136, guid: ffdc3de28f092c84092e2653214e2c9b,
@@ -30,9 +30,10 @@ MonoBehaviour:
       prefab: {fileID: 3097999677016730736, guid: 676184d95c41c8f4ab051c24073d7eb8,
         type: 3}
       lifetime: 0
-    _EndShakeStartFrame: 18
+    _EndShakeStartTime: 0.5
     _FrameMove:
-      _Frame: -1
+      mNeedMove: 0
+      mStartTime: 0
       _xCurve:
         serializedVersion: 2
         m_Curve: []
@@ -46,3 +47,5 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     _HitBubbleGroup: weapon
+    _ChargingSecs: 0
+    _Length: 0.8

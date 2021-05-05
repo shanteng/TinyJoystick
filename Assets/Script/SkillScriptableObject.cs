@@ -46,14 +46,20 @@ public class SkillConfig
     [Title("打击特效信息", "#FFFF0F")]
     public FxInfo _AttackHitFx;
 
-    [Title("后摇开始帧", "#FFFF0F")]
-    public int _EndShakeStartFrame;
+    [Title("后摇开始时间", "#FFFF0F")]
+    public float _EndShakeStartTime;
 
     [Title("位移", "#FFFF0F")]
     public FrameMove _FrameMove;
 
     [Title("攻击判定气泡组", "#FFFF0F")]
     public string _HitBubbleGroup = "weapon";
+
+    [Title("蓄力所需时间", "#FFFF0F")]
+    public float _ChargingSecs;
+
+    [Title("动作时长", "#FFFF0F")]
+    public float _Length;
 }
 
 [System.Serializable]
@@ -66,8 +72,10 @@ public struct FxInfo
 [System.Serializable]
 public class FrameMove
 {
-    [Title("开始位移的帧", "#FFFF0F")]
-    public int _Frame;
+    [Title("是否需要位移", "#FFFF0F")]
+    public bool mNeedMove;
+    [Title("开始位移的时间", "#FFFF0F")]
+    public float mStartTime;
     [Title("X位移曲线", "#FFFF0F")]
     public AnimationCurve _xCurve;
     [Title("Y位移曲线", "#FFFF0F")]

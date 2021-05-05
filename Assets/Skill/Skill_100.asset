@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31f9c3b66af8a834a894738161cdd661, type: 3}
-  m_Name: Skill_3
+  m_Name: Skill_100
   m_EditorClassIdentifier: 
   _config:
-    _AttackValue: 3
-    _Type: 0
+    _AttackValue: 100
+    _Type: 1
     _keyData:
       mIsGrounded: 1
-      mCode: 0
-      mEvent: 1
+      mCode: 1
+      mEvent: 3
       mDir: 0
     _NextAttackValue: 0
     _AttackDamage: 30
@@ -47,5 +47,5 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     _HitBubbleGroup: weapon
-    _ChargingSecs: 0
+    _ChargingSecs: 0.5
     _Length: 1.333

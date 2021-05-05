@@ -1,4 +1,5 @@
 ﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,46 @@ public enum XMoveDirection
     None = 0,
     Left = -1,//向左边
     Right = 1,//向右边
+}
+
+public class AttackingInfo
+{
+    public List<SkillConfig> mAttackQueue = new List<SkillConfig>();
+    public SkillConfig mCurrentAttack = null;
+    public float mStartTime;
+    public Coroutine mAttackProcess;
+    public bool mHitBegin = false;
+
+    public AttackingInfo()
+    {
+        this.Reset();
+    }
+
+    public void Reset()
+    {
+        this.mAttackQueue.Clear();
+        this.mCurrentAttack = null;
+        this.mStartTime = 0;
+        this.mHitBegin = false;
+        mAttackProcess = null;
+    }
+
+    public bool IsAttackCharging => this.mCurrentAttack != null && this.mCurrentAttack._Type == SkillType.Charging;
+
+    public float RunningSecs => (Time.time - this.mStartTime);
+
+    public bool IsBeginEndShake()
+    {
+        //后摇开启前都判定为可伤害
+        return this.mCurrentAttack != null && this.RunningSecs >= this.mCurrentAttack._EndShakeStartTime;
+    }
+
+    public bool IsAttackOver()
+    {
+        return (this.mCurrentAttack == null ||  this.RunningSecs >= this.mCurrentAttack._Length) && this.mAttackQueue.Count == 0;
+    }
+
+    public bool IsAttacking => this.mCurrentAttack != null || this.mAttackQueue.Count > 0;
 }
 
 [System.Serializable]
@@ -93,10 +134,10 @@ public class LocalPlayerMotionHandler : MonoBehaviour
     private bool mIsGrounded = true;
     private XMoveDirection _direction = XMoveDirection.Right;
     private Dictionary<XMoveDirection, float> _FaceDirRotateYDic;
-    public List<SkillConfig> mSkillConfigList;
-    private Dictionary<int, SkillConfig> mSkillDic;
-    private bool mIsButtonTouched = false;
-    private List<SkillConfig> mSkillQueueList = new List<SkillConfig>();
+
+    public List<SkillScriptableObject> mSkillConfigList;
+    private AttackingInfo mAttackInfo;
+
     public XMoveDirection Dir => this._direction;
     private void Awake()
     {
@@ -105,12 +146,8 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         _FaceDirRotateYDic.Add(XMoveDirection.Right, mRotateY);
         _FaceDirRotateYDic.Add(XMoveDirection.Left, mRotateY-180);
 
-        this.mSkillDic = new Dictionary<int, SkillConfig>();
-        foreach (SkillConfig cfg in this.mSkillConfigList)
-        {
-            this.mSkillDic.Add(cfg._AttackValue, cfg);
-        }
-
+        this.mAttackInfo = new AttackingInfo();
+      
         this.ChangeDir(XMoveDirection.Right);
     }
 
@@ -131,6 +168,7 @@ public class LocalPlayerMotionHandler : MonoBehaviour
     }
 
     #region StateBehaviour
+
     public void OnBehaviourCallBack(StateCallBackFrame callFrameData)
     {
         if (callFrameData.mType == FrameParamType.JumpReady)
@@ -142,13 +180,64 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         {
             this.mPlayer.OnBeginFalling();
         }
+        else if (callFrameData.mType == FrameParamType.Attack)
+        {
+            this.BeginAttack();
+        }
+        else if (callFrameData.mType == FrameParamType.HoldingAttack)
+        {
+            this.BeginHoldingAttack();
+        }
     }
     #endregion
 
+    private void BeginHoldingAttack()
+    {
+        this.mAttackInfo.mStartTime = Time.time;
+        this.mPlayer.HoldingAttack();
+    }
+
+    private void BeginAttack()
+    {
+        //攻击判定协程
+        // this.PlayAttackEffect();
+        if (mAttackInfo.mAttackProcess != null)
+            StopCoroutine(mAttackInfo.mAttackProcess);
+
+        this.mAttackInfo.mStartTime = Time.time;
+        this.mAttackInfo.mHitBegin = false;
+        mAttackInfo.mAttackProcess = StartCoroutine(AttackProcedural());
+    }
+
+    IEnumerator AttackProcedural()
+    {
+        while (!this.mAttackInfo.IsAttackOver())
+        {
+            //攻击判定开始
+            if (this.mAttackInfo.IsBeginEndShake())
+            {
+                if (this.DoAttackCommand())
+                    yield break;
+            }
+            else
+            {
+                if (!this.mAttackInfo.mHitBegin)
+                {
+                    this.mAttackInfo.mHitBegin = true;
+                    //this._actor.mRig.EnableHitDetection(mAttackBubbleGroup, ProcessDamage);
+                }
+            }//end else
+            yield return 0;
+        }//end while
+
+        this.AttackEnd();
+    }
+
+  
 
     public void CallJump()
     {
-        if (this.mJumpData.CanJump())
+        if (this.mJumpData.CanJump() && this.mAttackInfo.IsAttacking == false)
         {
             this.mPlayer.TriggerJump(this.mJumpData.mJumpCount);
             this.mJumpData.mLastCallTime = Time.time;
@@ -169,7 +258,10 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         {
             this.CallJump();
         }
-        this.ProcessMoving();
+
+        if (this.mAttackInfo.IsAttacking == false)
+            this.EvaluateHorizalMoving();
+        this.ProcessingPostion();
     }
 
     private void EvaluateSpeedStrength(float dt)
@@ -217,17 +309,50 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         }
     }
 
-    private void ProcessMoving()
+    private void ProcessingPostion()
+    {
+        float deltaTime = Time.deltaTime;
+        if(this.mIsGrounded == false)
+            this.mMotion.y -= this.mGravity * deltaTime;
+        Vector3 newPosition = this.transform.position + deltaTime * this.mMotion;
+        //着地判定
+        bool PreGround = this.mIsGrounded;
+        this.mIsGrounded = false;
+        if (Physics.Raycast(newPosition + Vector3.up * groundCheckElevation, Vector3.down, out var hitInfo, groundCheckElevation * 2f, 1))
+        {
+            if (hitInfo.distance < groundCheckElevation + groundThreshold && this.mMotion.y <= 0)
+            {
+                this.mIsGrounded = true;
+                newPosition.y += groundCheckElevation - hitInfo.distance;
+            }
+        }
+
+        this.transform.position = newPosition;
+        this.mPlayer.SetIsGrounded(this.mIsGrounded);
+
+
+        if (PreGround && !this.mIsGrounded && UtilTools.IsFloatSame(this.mMotion.y, 0))
+        {
+            //跌落
+            this.FallFromBorder();
+        }
+        else if (this.mIsGrounded && !PreGround && this.mMotion.y < 0)
+        {
+            this.StartTouchGround();
+            this.mJumpData.Reset();
+            this.mPlayer.ResetJump();
+        }
+    }
+
+    private void EvaluateHorizalMoving()
     {
         float deltaTime = Time.deltaTime;
         if (deltaTime > this.mMaxDeltaTime)
             deltaTime = this.mMaxDeltaTime;
 
         XMoveDirection useDir = Joystick.Instance.Data.Dir;
-
         float SpeedRate = Mathf.Abs(this.mMotion.x) / mMaxSpeedValue;
         bool preHasSpeed = UtilTools.IsFloatSame(SpeedRate, 0) == false;
-
         //计算速度
         this.EvaluateSpeedStrength(deltaTime);
 
@@ -250,40 +375,7 @@ public class LocalPlayerMotionHandler : MonoBehaviour
                 this.mPlayer.TriggerIdle();
             }
         }
-        else
-        {
-            this.mMotion.y -= this.mGravity * deltaTime;
-        }
- 
-        Vector3 newPosition = this.transform.position + deltaTime * this.mMotion;
         this.mPlayer.SetSpeed(SpeedRateNow);
-
-        //着地判定
-        bool PreGround = this.mIsGrounded;
-        this.mIsGrounded = false;
-        if (Physics.Raycast(newPosition + Vector3.up * groundCheckElevation, Vector3.down, out var hitInfo, groundCheckElevation * 2f, 1))
-        {
-            if (hitInfo.distance < groundCheckElevation + groundThreshold && this.mMotion.y <= 0)
-            {
-                this.mIsGrounded = true;
-                newPosition.y += groundCheckElevation - hitInfo.distance;
-            }
-        }
-        this.transform.position = newPosition;
-        this.mPlayer.SetIsGrounded(this.mIsGrounded);
-
-
-        if (PreGround && !this.mIsGrounded && UtilTools.IsFloatSame(this.mMotion.y, 0))
-        {
-            //跌落
-            this.FallFromBorder();
-        }
-        else if (this.mIsGrounded && !PreGround && this.mMotion.y < 0)
-        {
-            this.StartTouchGround();
-            this.mJumpData.Reset();
-            this.mPlayer.ResetJump();
-        }
     }
 
     private void FallFromBorder()
@@ -300,28 +392,99 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         this.mMotion.x = 0;
     }
 
-    public void CallAttackTouched(JoyButtonResponseData data)
-    {
-        mIsButtonTouched = true;
-
-        SkillConfig lastBuff = null;
-        if (this.mSkillQueueList.Count > 0)
-            lastBuff = this.mSkillQueueList[mSkillQueueList.Count - 1];
-
-        if (lastBuff == null)
-        {
-            this.mMotion.x = 0;//停止横向移动
-        }
-    }
 
     public void CallAttackHolding(JoyButtonResponseData data)
     {
-      
+        if (this.mAttackInfo.mCurrentAttack == null || this.mAttackInfo.IsBeginEndShake() || this.mAttackInfo.mCurrentAttack._keyData.mCode != data.mCode)
+        {
+            this.CallAttackTouched(data);
+        }
+        else if (this.mAttackInfo.mCurrentAttack._keyData.mCode == data.mCode)
+        {
+            //相同指令，构造连击
+            data.mEvent = JoyButtonEvent.Touched;
+            SkillConfig lastBuff = this.mAttackInfo.mAttackQueue.Count > 0 ? this.mAttackInfo.mAttackQueue[mAttackInfo.mAttackQueue.Count - 1] : this.mAttackInfo.mCurrentAttack;
+            while (lastBuff != null && lastBuff._NextAttackValue > 0)
+            {
+                this.CallAttackTouched(data);
+                lastBuff = this.mAttackInfo.mAttackQueue.Count > 0 ? this.mAttackInfo.mAttackQueue[mAttackInfo.mAttackQueue.Count - 1] : this.mAttackInfo.mCurrentAttack;
+            }
+        }
     }
 
     public void CallAttackEnd(JoyButtonResponseData data)
     {
-        mIsButtonTouched = false;
+        //蓄力释放
+        if (this.mAttackInfo.IsAttackCharging)
+        {
+            float passtime = Time.time - this.mAttackInfo.mStartTime;
+            if (passtime >= this.mAttackInfo.mCurrentAttack._ChargingSecs)
+            {
+                this.mPlayer.TriggerAttack(this.mAttackInfo.mCurrentAttack._AttackValue,false);
+            }
+            else
+            {
+                this.mAttackInfo.Reset();
+            }
+        }
+    }
+
+    public void CallAttackTouched(JoyButtonResponseData data)
+    {
+        SkillConfig useConfig;
+        SkillConfig lastBuff = this.mAttackInfo.mAttackQueue.Count > 0 ? this.mAttackInfo.mAttackQueue[mAttackInfo.mAttackQueue.Count - 1] : this.mAttackInfo.mCurrentAttack;
+        bool isSameCommand = lastBuff != null && data.IsEqual(lastBuff._keyData);
+        if (isSameCommand)
+        {
+            //判定连击
+            useConfig = lastBuff._NextAttackValue > 0 ? this.DataToConfig(data, lastBuff._NextAttackValue) : null;
+        }
+        else
+        {
+            //第一步攻击
+            useConfig = this.DataToConfig(data, 0);
+        }
+
+        if (useConfig == null)
+            return;
+
+        if (isSameCommand == false)
+            this.mAttackInfo.mAttackQueue.Clear();
+        this.mAttackInfo.mAttackQueue.Add(useConfig);
+
+        if (this.mAttackInfo.mCurrentAttack == null || this.mAttackInfo.IsBeginEndShake())
+            this.DoAttackCommand();
+    }
+
+
+    private bool DoAttackCommand()
+    {
+        if (this.mAttackInfo.mAttackQueue.Count == 0)
+            return false;
+        this.mAttackInfo.mCurrentAttack = this.mAttackInfo.mAttackQueue[0];
+        this.mAttackInfo.mAttackQueue.RemoveAt(0);
+        this.mPlayer.TriggerAttack(this.mAttackInfo.mCurrentAttack._AttackValue, this.mAttackInfo.mCurrentAttack._Type == SkillType.Charging);
+        return true;
+    }
+
+    private SkillConfig DataToConfig(JoyButtonResponseData data, int attackValue)
+    {
+        foreach (SkillScriptableObject scp in this.mSkillConfigList)
+        {
+            if (scp._config._keyData.IsEqual(data))
+            {
+                if (attackValue == 0 || attackValue == scp._config._AttackValue)
+                {
+                    return scp._config;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void AttackEnd()
+    {
+        this.mAttackInfo.Reset();
     }
 
     private void CallAttack(JoyButtonResponseData data)
@@ -338,15 +501,6 @@ public class LocalPlayerMotionHandler : MonoBehaviour
         else if (data.mEvent == JoyButtonEvent.EndTouch)
         {
             this.CallAttackEnd(data);
-        }
-
-        SkillConfig useConfig = null;
-        foreach (SkillConfig config in this.mSkillDic.Values)
-        {
-            if (config._keyData.IsEqual(data))
-            {
-                useConfig = config;
-            }
         }
     }
 

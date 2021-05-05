@@ -30,6 +30,24 @@ public class NetworkPlayer : MonoBehaviour
     }
 
 
+    public void TriggerAttack(int attackvalue,bool isHolding)
+    {
+        this.SetInt(TriggerKeyHash.State, (int)StateValue.Attack);
+        this.SetInt(TriggerKeyHash.AttackValue, attackvalue);
+        this.SetIsHoldingAttack(isHolding);
+    }
+
+    public void HoldingAttack()
+    {
+        this.SetInt(TriggerKeyHash.AttackValue, 0);
+    }
+
+    public void SetIsHoldingAttack(bool ishold)
+    {
+        this.SetBool(TriggerKeyHash.Holding, ishold);
+    }
+
+
     public void TriggerJump(int jumpCount)
     {
         this.SetNoneState();

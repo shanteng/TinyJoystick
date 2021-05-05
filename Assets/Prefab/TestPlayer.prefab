@@ -2209,7 +2209,11 @@ MonoBehaviour:
   groundThreshold: 0.05
   mMaxDeltaTime: 0.017
   mMotion: {x: 0, y: 0, z: 0}
-  mSkillConfigList: []
+  mSkillConfigList:
+  - {fileID: 11400000, guid: 8372eb5374738ef46bd9f218173d6379, type: 2}
+  - {fileID: 11400000, guid: 31f8d16fe0e49fe4a8dd97655a0cd247, type: 2}
+  - {fileID: 11400000, guid: 9192b4fe801ad5c4bbccc1794a6ccede, type: 2}
+  - {fileID: 11400000, guid: da166e86aaa1c1e41a3e2095aa64a0af, type: 2}
 --- !u!114 &5164687892118262058
 MonoBehaviour:
   m_ObjectHideFlags: 0

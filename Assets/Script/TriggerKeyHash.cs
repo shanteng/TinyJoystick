@@ -12,6 +12,7 @@ public class TriggerKeyHash
     public static int Falling = Animator.StringToHash("Falling");
     public static int IsGrounded = Animator.StringToHash("IsGrounded");
     public static int JumpCount = Animator.StringToHash("JumpCount");
+    public static int Holding = Animator.StringToHash("Holding");
 }
 
 
